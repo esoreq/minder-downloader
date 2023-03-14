@@ -1,3 +1,35 @@
+"""
+The `minder` module provides classes and functions for downloading data from the Minder research portal.
+
+Classes:
+- MinderDatasetDownload: Class for downloading Minder research portal datasets.
+
+Functions:
+- load: Downloads data from the Minder research portal and returns it as a Pandas DataFrame.
+
+Modules:
+- utils: Module with utility functions used in this module.
+- info: Module with information about available datasets and organizations in the Minder research portal.
+- update: Module with functions for updating tokens used to authenticate with the Minder research portal.
+
+Dependencies:
+- requests: Library for making HTTP requests.
+- json: Library for working with JSON data.
+- logging: Library for logging messages.
+- pandas: Library for working with tabular data.
+- numpy: Library for working with numerical data.
+- datetime: Library for working with dates and times.
+- tqdm: Library for displaying progress bars.
+- os: Library for interacting with the operating system.
+- pathlib: Library for working with file paths.
+- time: Library for working with time intervals.
+- io: Library for working with I/O streams.
+- typing: Library for type hinting.
+
+"""
+
+
+
 import requests
 import json
 import logging
@@ -27,13 +59,35 @@ AUTH = BearerAuth(os.getenv('MINDER_TOKEN'))
 
 
 class MinderDatasetDownload:
-    """Class for downloading Minder research portal datasets."""
+    """
+    Class for downloading Minder research portal datasets.
+
+    Methods:
+    - __init__: Initializes the object with input parameters.
+    - post_request: Sends a POST request to the Minder research portal and stores the resulting request ID.
+    - _get_output_urls: Retrieves the output URLs for a previously sent request ID.
+    - process_request: Polls the Minder research portal for output URLs until they become available.
+    - _persistent_download: Downloads and returns data from a given URL, retrying if necessary.
+    - download_data: Downloads data from the Minder research portal and returns it as a Pandas DataFrame.
+    """
 
     def __init__(self, 
                  since: dt.datetime, 
                  until: dt.datetime, 
                  datasets: List[str],
                  organizations:list = None):
+        """
+        Initializes the object with input parameters.
+
+        Parameters:
+        - since: A datetime object representing the start date of the desired data.
+        - until: A datetime object representing the end date of the desired data.
+        - datasets: A list of strings representing the names of the datasets to download.
+        - organizations (optional): A list of strings representing the names of the organizations to download data from.
+
+        Returns:
+        None
+        """        
         self.since = date2iso(since)
         self.until = date2iso(until)
         self.datasets = datasets
@@ -57,7 +111,15 @@ class MinderDatasetDownload:
 
 
     def post_request(self) -> None:
-        """Sends a POST request to the Minder research portal and stores the resulting request ID."""
+        """
+        Sends a POST request to the Minder research portal and stores the resulting request ID.
+
+        Parameters:
+        None
+
+        Returns:
+        None
+        """
         request = requests.post(
             self.server,
             data=json.dumps(self.data_request),
@@ -68,7 +130,15 @@ class MinderDatasetDownload:
         logging.debug(f"request_id: {self._request_id}")
 
     def _get_output_urls(self) -> pd.DataFrame:
-        """Retrieves the output URLs for a previously sent request ID."""
+        """
+        Retrieves the output URLs for a previously sent request ID.
+
+        Parameters:
+        None
+
+        Returns:
+        A Pandas DataFrame with the output URLs and their associated metadata.
+        """
         with requests.get(f'{self.server}/{self._request_id}/', auth=AUTH) as request:
             request_elements = pd.DataFrame(request.json())
             output = pd.DataFrame()
@@ -87,7 +157,15 @@ class MinderDatasetDownload:
         return output
 
     def process_request(self, sleep_time: int = 2) -> None:
-        """Polls the Minder research portal for output URLs until they become available."""
+        """
+        Polls the Minder research portal for output URLs until they become available.
+
+        Parameters:
+        - sleep_time (optional): An integer representing the number of seconds to wait between polling requests.
+
+        Returns:
+        None
+        """
         logging.debug(f'Processing {self.datasets}')
         while self._csv_url.empty:
             sleep(sleep_time)
@@ -95,7 +173,16 @@ class MinderDatasetDownload:
    
 
     def _persistent_download(self, url: str, idx: int) -> pd.DataFrame:
-        """Downloads and returns data from a given URL, retrying if necessary."""
+        """
+        Downloads and returns data from a given URL, retrying if necessary.
+
+        Parameters:
+        - url: A string representing the URL to download data from.
+        - idx: An integer representing the index of the URL in the DataFrame returned by _get_output_urls().
+
+        Returns:
+        A Pandas DataFrame with the downloaded data.
+        """
         df = pd.DataFrame()
         while df.empty:
             try:
@@ -109,7 +196,15 @@ class MinderDatasetDownload:
         return df
 
     def download_data(self) -> pd.DataFrame:
-        """Downloads data from the Minder research portal and returns it as a Pandas DataFrame."""
+        """
+        Downloads data from the Minder research portal and returns it as a Pandas DataFrame.
+
+        Parameters:
+        None
+
+        Returns:
+        A Pandas DataFrame with the downloaded data.
+        """
         self.post_request()
         self.process_request()
 
@@ -131,6 +226,17 @@ class MinderDatasetDownload:
 
     
 def load(since: dt.datetime, until: dt.datetime, datasets: list, organizations: list = None) -> pd.DataFrame:
+    """
+    Downloads data from the Minder research portal and returns it as a Pandas DataFrame.
+    Parameters:
+    - since: A datetime object representing the start date of the desired data.
+    - until: A datetime object representing the end date of the desired data.
+    - datasets: A list of strings representing the names of the datasets to download.
+    - organizations (optional): A list of strings representing the names of the organizations to download data from.
+
+    Returns:
+    A Pandas DataFrame with the downloaded data.
+    """        
     downloader = MinderDatasetDownload(since, until, datasets, organizations)
     downloader.post_request()
     downloader.process_request()

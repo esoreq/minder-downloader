@@ -5,6 +5,13 @@ import os
 
 
 def check_config():
+    """Check if a configuration file exists, and create/update it with required information.
+
+    This function checks if a YAML configuration file named 'info.yaml' exists in the same directory as this script. If the file doesn't exist, it creates it with default headers and server information, and sets the TOKEN value to None. If the file exists, it loads its contents, retrieves the TOKEN value, and updates it with a new token if the value is None. It then writes the updated information back to the file.
+
+    Returns:
+    None
+    """
     root = Path(__file__).parent
     info_path = f'{root}{os.sep}info.yaml'
     if not path_exists(info_path):
