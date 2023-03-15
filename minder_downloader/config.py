@@ -12,7 +12,7 @@ def check_config():
     Returns:
     None
     """
-    root = Path(__file__).parent
+    root = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
     info_path = f'{root}{os.sep}info.yaml'
     if not path_exists(info_path):
         tmp = {'headers':{ 'Accept': 'text/plain',
