@@ -50,7 +50,7 @@ from .update import get_token
 # logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.WARNING)
 #
-ROOT =  Path(__file__).parent
+ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
 INFO_PATH = f'{ROOT}{os.sep}info.yaml'
 os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
 SERVER = load_yaml(INFO_PATH)['server']

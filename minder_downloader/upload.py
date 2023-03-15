@@ -3,7 +3,9 @@ import pandas as pd
 from .utils import BearerAuth, load_yaml
 import os 
 
-os.environ['MINDER_TOKEN'] = load_yaml('info.yaml')['token']
+ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
+INFO_PATH = f'{ROOT}{os.sep}info.yaml'
+os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
 AUTH = BearerAuth(os.getenv('MINDER_TOKEN'))
 
 
