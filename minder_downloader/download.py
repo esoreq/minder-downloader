@@ -41,21 +41,19 @@ import os
 from pathlib import Path
 from time import sleep
 from io import StringIO
-from typing import List
+from typing import List,Union
 from .utils import BearerAuth, date2iso, load_yaml
 from .info import _minder_datasets_info,_minder_organizations_info
 from .update import get_token
+from .config import check_config
+
 # Set up logging
 # logging.basicConfig(level=logging.DEBUG)
 # logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.WARNING)
 #
 ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
-INFO_PATH = f'{ROOT}{os.sep}info.yaml'
-os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
-SERVER = load_yaml(INFO_PATH)['server']
-HEADERS = load_yaml(INFO_PATH)['headers']
-AUTH = BearerAuth(os.getenv('MINDER_TOKEN'))
+
 
 
 class MinderDatasetDownload:
@@ -72,10 +70,10 @@ class MinderDatasetDownload:
     """
 
     def __init__(self, 
-                 since: dt.datetime, 
-                 until: dt.datetime, 
                  datasets: List[str],
-                 organizations:list = None):
+                 since: Union[dt.datetime, None] = None, 
+                 until: Union[dt.datetime, None] = None, 
+                 organizations:Union[list, None] = None):
         """
         Initializes the object with input parameters.
 
@@ -87,14 +85,16 @@ class MinderDatasetDownload:
 
         Returns:
         None
-        """        
+        """
+        check_config()
+        self.setup()        
+        since = since or dt.datetime.now() -  dt.timedelta(days=7)
+        until = until or dt.datetime.now()
         self.since = date2iso(since)
         self.until = date2iso(until)
         self.datasets = datasets
         self.datasets_info = _minder_datasets_info()
         self.organizations_info = _minder_organizations_info()  
-        self.headers = HEADERS
-        self.server = SERVER + '/export'
         self.data_request = {
             'since': self.since,
             'until': self.until,
@@ -108,6 +108,12 @@ class MinderDatasetDownload:
         self._request_id = ''
         self._csv_url = pd.DataFrame()
 
+    def setup(self) -> None:
+        INFO_PATH = f'{ROOT}{os.sep}info.yaml'
+        os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
+        self.server = load_yaml(INFO_PATH)['server'] + '/export'
+        self.headers = load_yaml(INFO_PATH)['headers'] 
+        self.auth = BearerAuth(os.getenv('MINDER_TOKEN'))
 
 
     def post_request(self) -> None:
@@ -124,7 +130,7 @@ class MinderDatasetDownload:
             self.server,
             data=json.dumps(self.data_request),
             headers=self.headers,
-            auth=BearerAuth(os.getenv('MINDER_TOKEN'))
+            auth=self.auth 
         )
         self._request_id = request.headers['Content-Location'].split('/')[-1]
         logging.debug(f"request_id: {self._request_id}")
@@ -139,7 +145,7 @@ class MinderDatasetDownload:
         Returns:
         A Pandas DataFrame with the output URLs and their associated metadata.
         """
-        with requests.get(f'{self.server}/{self._request_id}/', auth=AUTH) as request:
+        with requests.get(f'{self.server}/{self._request_id}/', auth=self.auth ) as request:
             request_elements = pd.DataFrame(request.json())
             output = pd.DataFrame()
             if request_elements.status.iat[0] == 202:
@@ -186,7 +192,7 @@ class MinderDatasetDownload:
         df = pd.DataFrame()
         while df.empty:
             try:
-                with requests.get(url, stream=True, auth=AUTH) as request:
+                with requests.get(url, stream=True, auth=self.auth ) as request:
                     decoded_data = StringIO(request.content.decode('utf-8-sig'))
                     df = pd.read_csv(decoded_data, sep=',', engine='python')
                     df['source'] = self._csv_url.type[idx]
@@ -225,7 +231,7 @@ class MinderDatasetDownload:
     
 
     
-def load(since: dt.datetime, until: dt.datetime, datasets: list, organizations: list = None) -> pd.DataFrame:
+def load(datasets: list,since: Union[dt.datetime, None] = None, until: Union[dt.datetime, None] = None, organizations: Union[list, None] = None) -> pd.DataFrame:
     """
     Downloads data from the Minder research portal and returns it as a Pandas DataFrame.
     Parameters:
@@ -237,7 +243,7 @@ def load(since: dt.datetime, until: dt.datetime, datasets: list, organizations: 
     Returns:
     A Pandas DataFrame with the downloaded data.
     """        
-    downloader = MinderDatasetDownload(since, until, datasets, organizations)
+    downloader = MinderDatasetDownload(datasets, since, until, organizations)
     downloader.post_request()
     downloader.process_request()
     data = downloader.download_data()

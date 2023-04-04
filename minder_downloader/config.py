@@ -12,6 +12,7 @@ def check_config():
     Returns:
     None
     """
+    TOKEN = os.environ.get('RESEARCH_PORTAL_TOKEN_PATH') # check if token is set at the environment level
     root = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
     info_path = f'{root}{os.sep}info.yaml'
     if not path_exists(info_path):
@@ -19,7 +20,6 @@ def check_config():
                         'Connection': 'keep-alive',
                         'Content-type': 'application/json'},  
                 'server': 'https://research.minder.care/api'}
-        TOKEN = None
     else:
         tmp = load_yaml(info_path)
         TOKEN = tmp['token']
