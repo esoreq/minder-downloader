@@ -2,14 +2,23 @@ import requests
 import pandas as pd
 from .utils import BearerAuth, load_yaml
 import os 
+from .config import check_config
 
-ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
-INFO_PATH = f'{ROOT}{os.sep}info.yaml'
-os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
-AUTH = BearerAuth(os.getenv('MINDER_TOKEN'))
+
+
+def setup() -> tuple:
+    # Load credentials and server information from YAML file
+    check_config()
+    ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
+    INFO_PATH = f'{ROOT}{os.sep}info.yaml'
+    os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
+    server = load_yaml(INFO_PATH)['server'] + '/export'
+    auth = BearerAuth(os.getenv('MINDER_TOKEN'))
+    return server,auth
 
 
 def upload_file(file_2_upload):
+    server,auth = setup()
     file = open(f"{file_2_upload}", "rb")
     binary_data = file.read()
     requests.put(f'https://research.minder.care/api/reports/{file_2_upload}',

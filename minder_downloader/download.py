@@ -92,7 +92,7 @@ class MinderDatasetDownload:
         until = until or dt.datetime.now()
         self.since = date2iso(since)
         self.until = date2iso(until)
-        self.datasets = datasets
+        self.datasets = datasets if type(datasets) is list else [datasets]
         self.datasets_info = _minder_datasets_info()
         self.organizations_info = _minder_organizations_info()  
         self.data_request = {

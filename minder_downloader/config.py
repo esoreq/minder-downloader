@@ -3,6 +3,7 @@ from .update import get_token
 from pathlib import Path
 import os
 
+CONFIG_CHECKED = False
 
 def check_config():
     """Check if a configuration file exists, and create/update it with required information.
@@ -12,6 +13,12 @@ def check_config():
     Returns:
     None
     """
+
+    global CONFIG_CHECKED
+    if CONFIG_CHECKED:
+        return
+    CONFIG_CHECKED = True
+    
     TOKEN = os.environ.get('RESEARCH_PORTAL_TOKEN_PATH') # check if token is set at the environment level
     root = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
     info_path = f'{root}{os.sep}info.yaml'

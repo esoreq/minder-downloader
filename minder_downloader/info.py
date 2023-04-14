@@ -1,18 +1,21 @@
 import requests
 import pandas as pd
 from .utils import BearerAuth, load_yaml
+from .config import check_config
 import os 
 from pathlib import Path
 
-# Load credentials and server information from YAML file
-ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
-INFO_PATH = f'{ROOT}{os.sep}info.yaml'
-os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
-SERVER = load_yaml(INFO_PATH)['server']
-HEADERS = load_yaml(INFO_PATH)['headers']
-AUTH = BearerAuth(os.getenv('MINDER_TOKEN'))
 
 
+def setup() -> tuple:
+    # Load credentials and server information from YAML file
+    check_config()
+    ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
+    INFO_PATH = f'{ROOT}{os.sep}info.yaml'
+    os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
+    server = load_yaml(INFO_PATH)['server'] + '/export'
+    token = os.getenv('MINDER_TOKEN')
+    return server,token
 
 
 def _minder_datasets_info() -> pd.DataFrame:
@@ -29,8 +32,11 @@ def _minder_datasets_info() -> pd.DataFrame:
     - availableColumns: A list of available columns in the dataset.
     - domain: The domain the dataset belongs to.
     """
-    info_path = SERVER + '/info/datasets'
-    request = requests.get(info_path, auth=AUTH)
+    server,token = setup()
+    url = "https://research.minder.care/api/info/datasets"
+    headers = {"accept": "application/json", "Authorization" : f"Bearer {token}"}
+
+    request = requests.get(url, headers=headers)
     domains = request.json()['Categories'].keys()
     info = pd.concat([
         pd.DataFrame(request.json()['Categories'][domain])
@@ -54,7 +60,9 @@ def _minder_organizations_info() -> pd.DataFrame:
     - acronym: The organization's acronym.
     - description: A brief description of the organization.
     """    
-    info_path = SERVER + '/info/organizations'
-    request = requests.get(info_path, auth=AUTH)
+    server,token = setup()
+    url = "https://research.minder.care/api/info/organizations"
+    headers = {"accept": "application/json", "Authorization" : f"Bearer {token}"}
+    request = requests.get(url, headers=headers)
     info = pd.DataFrame(request.json()['organizations'])
     return info
