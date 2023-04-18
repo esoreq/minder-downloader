@@ -16,12 +16,14 @@ def check_config():
 
     global CONFIG_CHECKED
     if CONFIG_CHECKED:
-        return
+        return os.environ['MINDER_DOWNLOADER_HOME']
     CONFIG_CHECKED = True
 
     root = check_root_folder()
 
     check_token_file(root) # check if token is set at the environment level
+
+    return root
         
 
 
@@ -29,10 +31,11 @@ def check_root_folder():
     root = os.environ.get('MINDER_DOWNLOADER_HOME')
     if root is None:
         root = Path.home()
+
     minder_home = Path(f'{root}{os.sep}.minder')
     if not minder_home.exists():
         minder_home.mkdir(parents=True)
-        os.environ['MINDER_DOWNLOADER_HOME'] = f'{minder_home}'
+    os.environ['MINDER_DOWNLOADER_HOME'] = f'{minder_home}'
     return f'{minder_home}'
 
 
@@ -55,7 +58,8 @@ def check_token_file(root):
         with open(token_path, 'r') as file:
             TOKEN = file.read() 
     if not (TOKEN is None):
-        tmp['token'] = TOKEN     
+        tmp['token'] = TOKEN    
+        os.environ['MINDER_TOKEN'] = TOKEN
         if not path_exists(info_path):   
             write_yaml(info_path,tmp)
     else:
