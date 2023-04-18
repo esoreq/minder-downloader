@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "minder-downloader"
-version = "0.1.06"
+version = "0.1.07"
 description = "The minder-downloader module provides a simple interface for downloading datasets and uploading reports using the Minder research portal."
 authors = ["Dr Eyal Soreq <eyal.soreq@ukdri.ac.uk>"]
 readme = "README.md"
