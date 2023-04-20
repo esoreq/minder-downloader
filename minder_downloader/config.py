@@ -28,12 +28,11 @@ def check_config():
 def check_root_folder():
     root = os.environ.get('MINDER_DOWNLOADER_HOME')
     if root is None:
-        root = Path.home()
-    minder_home = Path(f'{root}{os.sep}.minder')
-    if not minder_home.exists():
-        minder_home.mkdir(parents=True)
-        os.environ['MINDER_DOWNLOADER_HOME'] = f'{minder_home}'
-    return f'{minder_home}'
+        minder_home = Path.home() / '.minder'
+        minder_home.mkdir(exist_ok=True)
+        root = str(minder_home)
+        os.environ['MINDER_DOWNLOADER_HOME'] = root
+    return root
 
 
 def check_token_file(root):
