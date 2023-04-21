@@ -3,17 +3,16 @@ import pandas as pd
 from .utils import BearerAuth, load_yaml
 import os 
 from .config import check_config
-
+from pathlib import Path
 
 
 def setup() -> tuple:
     # Load credentials and server information from YAML file
     check_config()
-    ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
-    INFO_PATH = f'{ROOT}{os.sep}info.yaml'
+    INFO_PATH = Path(os.environ['MINDER_DOWNLOADER_HOME']) / 'info.yaml'
     os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
     server = load_yaml(INFO_PATH)['server'] + '/export'
-    auth = BearerAuth(os.getenv('MINDER_TOKEN'))
+    auth = BearerAuth(os.environ['MINDER_TOKEN'])
     return server,auth
 
 

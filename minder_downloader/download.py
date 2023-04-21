@@ -52,7 +52,6 @@ from .config import check_config
 # logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.WARNING)
 #
-ROOT = os.environ.get('MINDER_DOWNLOADER_HOME', Path(__file__).parent)
 
 
 
@@ -86,7 +85,6 @@ class MinderDatasetDownload:
         Returns:
         None
         """
-        check_config()
         self.setup()        
         since = since or dt.datetime.now() -  dt.timedelta(days=7)
         until = until or dt.datetime.now()
@@ -109,11 +107,12 @@ class MinderDatasetDownload:
         self._csv_url = pd.DataFrame()
 
     def setup(self) -> None:
-        INFO_PATH = f'{ROOT}{os.sep}info.yaml'
+        check_config()
+        INFO_PATH = Path(os.environ['MINDER_DOWNLOADER_HOME']) / 'info.yaml'
         os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
         self.server = load_yaml(INFO_PATH)['server'] + '/export'
         self.headers = load_yaml(INFO_PATH)['headers'] 
-        self.auth = BearerAuth(os.getenv('MINDER_TOKEN'))
+        self.auth = BearerAuth(os.environ['MINDER_TOKEN'])
 
 
     def post_request(self) -> None:
