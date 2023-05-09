@@ -111,7 +111,7 @@ class MinderDatasetDownload:
         INFO_PATH = f'{self.root}{os.sep}info.yaml'
         self.server = load_yaml(INFO_PATH)['server'] + '/export'
         self.headers = load_yaml(INFO_PATH)['headers'] 
-        self.auth = BearerAuth(os.getenv('MINDER_TOKEN'))
+        self.auth = BearerAuth(os.environ['MINDER_TOKEN'])
 
 
     def post_request(self) -> None:

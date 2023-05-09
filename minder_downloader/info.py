@@ -9,10 +9,18 @@ from pathlib import Path
 
 def setup() -> tuple:
     # Load credentials and server information from YAML file
+<<<<<<< HEAD
     root = check_config()
     info_path = f'{root}{os.sep}info.yaml'
     token = os.getenv('MINDER_TOKEN')
     server = load_yaml(info_path)['server'] + '/export'
+=======
+    check_config()
+    INFO_PATH = Path(os.environ['MINDER_DOWNLOADER_HOME']) / 'info.yaml'
+    os.environ['MINDER_TOKEN'] = load_yaml(INFO_PATH)['token']
+    server = load_yaml(INFO_PATH)['server'] + '/export'
+    token = os.environ['MINDER_TOKEN']
+>>>>>>> 3474c24c60c38e24c3caf4e6511f0409b307c7d6
     return server,token
 
 
