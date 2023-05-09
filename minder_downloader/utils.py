@@ -130,9 +130,27 @@ def rolling_window(a, window:int):
     return seq
 
 
-def mine_transition(df,value:str,datetime:str='start_date',window:int=1):
-    """mine_transition extract transitions across timeseries
+def mine_transition(df,value:str,datetime:str='start_date',window:int=1) -> pd.DataFrame:
     """
+    Extract transitions from a DataFrame by comparing values in a specific column.
+
+    Args:
+        df (pd.DataFrame): A pandas DataFrame containing the data to extract transitions from.
+        value (str): The column name in the DataFrame to compare values from.
+        datetime (str, optional): The column name in the DataFrame containing the date and time of each value. Defaults to 'start_date'.
+        window (int, optional): The size of the window used to compare values. Defaults to 1.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the extracted transitions with the following columns:
+            start_date (datetime): The start date and time of each transition.
+            end_date (datetime): The end date and time of each transition.
+            source (str): The source value of each transition.
+            sink (str): The sink value of each transition.
+            transition (str): The concatenated source and sink values of each transition separated by '>'.
+            dur (float): The duration of each transition in seconds.
+
+    """
+    # TODO: add categorical capabilites
     df = df.sort_values(datetime).drop_duplicates().reset_index()
     if not df.empty:
        dur = (df[datetime].shift(-window) - 
@@ -141,10 +159,11 @@ def mine_transition(df,value:str,datetime:str='start_date',window:int=1):
        end_date = df[datetime].shift(-window).rename('end_date')
        source = df[value].rename('source')
        sink = df[value].shift(-window).rename('sink')
-       transition = pd.Series(rolling_window(df[value].values,window+1), dtype=object).rename('transition')
-       return pd.concat([start_date, end_date, source,sink,transition.reindex(sink.index), dur], axis=1)
+       transition_ = pd.Series(rolling_window(dd[value].astype('object').values,window+1),index=sink.iloc[:-1].index).rename('transition')
+
+       return pd.concat([start_date, end_date, source,sink,transition_, dur], axis=1).dropna()
     else:
-       return pd.DataFrame() 
+       return pd.DataFrame()   
 
 def str_to_time(time):
     """str_to_time converts time in string format to datetime.time format
