@@ -150,7 +150,6 @@ def mine_transition(df,value:str,datetime:str='start_date',window:int=1) -> pd.D
             dur (float): The duration of each transition in seconds.
 
     """
-    # TODO: add categorical capabilites
     df = df.sort_values(datetime).drop_duplicates().reset_index()
     if not df.empty:
        dur = (df[datetime].shift(-window) - 
@@ -159,11 +158,11 @@ def mine_transition(df,value:str,datetime:str='start_date',window:int=1) -> pd.D
        end_date = df[datetime].shift(-window).rename('end_date')
        source = df[value].rename('source')
        sink = df[value].shift(-window).rename('sink')
-       transition_ = pd.Series(rolling_window(df[value].astype('object').values,window+1),index=sink.iloc[:-1].index).rename('transition')
-
-       return pd.concat([start_date, end_date, source,sink,transition_, dur], axis=1).dropna()
+       transition_ = pd.Series(rolling_window(df[value].astype('object').values,window+1),index=sink.iloc[:-window].index).rename('transition')
+       output = pd.concat([start_date, end_date, source,sink,transition_, dur], axis=1)
+       return output.dropna(subset='dur')
     else:
-       return pd.DataFrame()   
+       return pd.DataFrame()    
 
 def str_to_time(time):
     """str_to_time converts time in string format to datetime.time format
