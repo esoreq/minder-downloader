@@ -242,7 +242,5 @@ def load(datasets: list,since: Union[dt.datetime, None] = None, until: Union[dt.
     A Pandas DataFrame with the downloaded data.
     """        
     downloader = MinderDatasetDownload(datasets, since, until, organizations)
-    downloader.post_request()
-    downloader.process_request()
     data = downloader.download_data()
     return data    
